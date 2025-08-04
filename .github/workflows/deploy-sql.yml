@@ -5,8 +5,8 @@ on:
     branches:
       - main
   schedule:
-    - cron: '0 2 * * *'  # Runs daily at 02:00 UTC
-  workflow_dispatch:      # Manual trigger option
+    - cron: '0 2 * * *'  # Daily at 2:00 UTC
+  workflow_dispatch:      # Manual run option
 
 jobs:
   etl:
@@ -20,12 +20,13 @@ jobs:
       AZURE_SQL_USERNAME: ${{ secrets.AZURE_SQL_USERNAME }}
       AZURE_SQL_PASSWORD: ${{ secrets.AZURE_SQL_PASSWORD }}
       AZURE_SQL_PORT: '1433'
+      SQLALCHEMY_CONN_STRING: "mssql+pyodbc://${{ secrets.AZURE_SQL_USERNAME }}:${{ secrets.AZURE_SQL_PASSWORD }}@${{ secrets.AZURE_SQL_SERVER }}:${{ env.AZURE_SQL_PORT }}/${{ secrets.AZURE_SQL_DATABASE }}?driver=ODBC+Driver+18+for+SQL+Server"
 
     steps:
-      - name: 🧾 Checkout repository
+      - name: 🧾 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🔐 Azure Login
+      - name: 🔐 Azure Login via Service Principal
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
@@ -36,17 +37,16 @@ jobs:
           python-version: '3.10'
 
       - name: 📦 Install Python dependencies
-        run: |
-          pip install -r etl/requirements.txt
+        run: pip install -r etl/requirements.txt
 
-      - name: 🛠 Install ODBC Driver 18 for Azure SQL (Ubuntu 24.04)
+      - name: 🛠 Install Microsoft ODBC Driver for Azure SQL
         run: |
           sudo apt-get update
           sudo apt-get install -y curl gnupg
           curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
           curl https://packages.microsoft.com/config/ubuntu/24.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
           sudo apt-get update
-          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
 
       - name: 📤 Run extract step
         working-directory: ./etl
