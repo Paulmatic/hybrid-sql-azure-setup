@@ -3,7 +3,11 @@ import pandas as pd
 
 def extract_sales_data() -> pd.DataFrame:
     url = "https://fakestoreapi.com/products"
-    response = requests.get(url)
+    headers = {
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json"
+    }
+    response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
         data = response.json()
@@ -16,8 +20,5 @@ def extract_sales_data() -> pd.DataFrame:
         print("✅ Extracted data from API")
         return df
     else:
-        raise Exception(f"❌ API call failed: {response.status_code}")
+        raise Exception(f"❌ API call failed: {response.status_code} - {response.text}")
 
-if __name__ == "__main__":
-    df = extract_sales_data()
-    df.to_csv("etl/sales_data.csv", index=False)
