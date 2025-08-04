@@ -1,11 +1,12 @@
 name: Daily ETL Pipeline
+
 on:
   push:
     branches:
       - main
   schedule:
     - cron: '0 2 * * *'  # Runs daily at 02:00 UTC
-  workflow_dispatch:      # Allow manual trigger
+  workflow_dispatch:      # Manual trigger option
 
 jobs:
   etl:
@@ -17,45 +18,46 @@ jobs:
       AZURE_SQL_DATABASE: ${{ secrets.AZURE_SQL_DATABASE }}
       AZURE_SQL_USERNAME: ${{ secrets.AZURE_SQL_USERNAME }}
       AZURE_SQL_PASSWORD: ${{ secrets.AZURE_SQL_PASSWORD }}
+      AZURE_SQL_PORT: '1433'  # Default port; override if needed
 
     steps:
-      - name: Checkout repository
+      - name: 🧾 Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
-        working-directory: ./etl
+      - name: 📦 Install dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -r etl/requirements.txt
 
-      - name: Run extract step
-        working-directory: ./etl
+      - name: 🛠 Install ODBC driver for Azure SQL
         run: |
-          python extract_api.py
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql17
 
-      - name: Run transform step
+      - name: 📤 Run extract step
         working-directory: ./etl
-        run: |
-          python transform_data.py
+        run: python extract_api.py
 
-      - name: Run data quality checks
+      - name: 🔄 Run transform step
         working-directory: ./etl
-        run: |
-          python qa_checks.py
+        run: python transform_data.py
 
-      - name: Load to Azure SQL
+      - name: ✅ Run data quality checks
         working-directory: ./etl
-        run: |
-          python load_to_sql.py
+        run: python qa_checks.py
 
-      - name: Notify Success
+      - name: 💾 Load to Azure SQL
+        working-directory: ./etl
+        run: python load_to_sql.py
+
+      - name: ✅ Notify Success
         if: success()
-        run: echo "ETL pipeline ran successfully ✅"
+        run: echo "✅ ETL pipeline ran successfully at $(date -u)"
 
-      - name: Notify Failure
+      - name: ❌ Notify Failure
         if: failure()
-        run: echo "ETL pipeline failed ❌"
+        run: echo "❌ ETL pipeline failed at $(date -u)"
