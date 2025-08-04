@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environments
+.env
+*.env
+venv/
+.venv/
+
+# VS Code
+.vscode/
+
+# Jupyter and notebook caches
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# Mac/Linux/Windows
+.DS_Store
+Thumbs.db
+
+# Secrets
+secrets.json
+*.key
+*.pem
+service_account.json
+.terraform/
+# Terraform local state, modules, and provider binaries
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.backup
+infra/terraform/terraform.tfstate.d/
+infra/terraform/crash.log
+infra/terraform/.terraform.lock.hcl
+infra/terraform/terraform.tfvars.terraform/
+.infra/
+terraform.tfvars    
